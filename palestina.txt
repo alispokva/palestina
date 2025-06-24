@@ -12,14 +12,14 @@ const Bot = "Alis Pokva: "; // Bot's name
 // GLOBAL VARIABLES //
 const roomName = "♻ SNIPER VIP | CON ARDILLA ♻";
 const botName ="ardillita loca";
-const maxPlayers = 5;
+const maxPlayers = 4;
 const roomPublic = true;
 
 // GEOLOCALIZATION //
 const geo = [{"code": "PS", "lat": 40, "lon": -3}];
 
 // Admin password //
-var adminPassword = 193211;
+var adminPassword = 4321;
 
 const room = HBInit({ roomName: roomName, maxPlayers: maxPlayers, public: roomPublic, playerName: botName, geo: geo[0] });
 
@@ -46,14 +46,14 @@ var classicMap = '{"name":"S2","width":425,"height":200,"spawnDistance":170,"bg"
 /* OPTIONS */
 const afkLimit = 12;
 const drawTimeLimit = Infinity;
-const maxTeamSize = 3;
-let slowMode = 2;
+const maxTeamSize = 2;
+let slowMode = 0;
 
 /* PLAYERS */
 const Team = { SPECTATORS: 0, RED: 1, BLUE: 2 };
 const extendedP = [];
-// Player Object ID, AUTH, CONNECTION, AFK STATUS, ACTIVITY, GOALKEEPER, MUTE
-const eP = { ID: 0, AUTH: 1, CONN: 2, AFK: 3, ACT: 4, GK: 5, MUTE: 6};
+// Player Object ID, AUTH, CONNECTION, AFK STATUS, ACTIVITY, GOALKEEPER, MUTE, LAST_MSG_TIME, MSG_COUNT
+const eP = { ID: 0, AUTH: 1, CONN: 2, AFK: 3, ACT: 4, GK: 5, MUTE: 6, LASTMSG: 7, COUNT: 8 };
 // Stats: "Auth" : '["0-Games", "1-Wins", "2-Draws", "3-Losses", "4-Winrate", "5-Goals", "6-Assists", "7-GK", "8-CS", "9-CS%", "10- ELO", "11-Role", "12-Nick", "13-Emoji", "14-Color", "15-MSG"]'
 const Ss = { GA: 0, WI: 1, DR: 2, LS: 3, WR: 4, GL: 5, AS: 6, GK: 7, CS: 8, CP: 9, ELO: 10, RL: 11, NK: 12, EMOJI: 13, COLOR: 14, MSG: 15};
 let players;
@@ -89,7 +89,7 @@ let allReds = []; // ... those who came in a very unequal game.
 let inChooseMode = false; // This variable enables to distinguish the 2 phases of playing and choosing which should be dealt with very differently
 let redCaptainChoice = "";
 let blueCaptainChoice = "";
-const chooseTime = 10;
+const chooseTime = 20;
 let timeOutCap;
 
 /* AUXILIARY */
@@ -281,12 +281,6 @@ function blueToRedBtn() {
 	}
 }
 
-
-/* Setting the team colors for a game room. */
-room.setTeamColors(Team.BLUE, 60, 0xFFFFFF, [0x0080ff, 0x0080ff, 0x0080ff]);
-room.setTeamColors(Team.RED, 60, 0xFFFFFF, [0xFF4D40, 0xFF4D40, 0xFF4D40]);
-
-
 // time.js
 /**
  * The function checks the time remaining in a game and performs certain actions based on the time and
@@ -307,13 +301,6 @@ function checkTime() {
 		}
 		goldenGoal = true;
 		room.sendAnnouncement("Gol gana! El que pierde es fan de vox.", null, 0x4ffaff, "bold", 1);
-	}
-	if (Math.abs(drawTimeLimit * 60 - scores.time - 60) <= 0.01 && players.length > 2) {
-		if (checkTimeVariable == false) {
-			checkTimeVariable = true;
-			setTimeout(() => { checkTimeVariable = false; }, 10);
-			room.sendAnnouncement(Bot + "⌛ Quedan 60 segundos para que termine el partido !", null, 0x4ffaff, "bold", 1);
-		}
 	}
 	if (Math.abs(scores.time - drawTimeLimit * 60) <= 0.01 && players.length > 2) {
 		if (checkTimeVariable == false) {
@@ -344,18 +331,17 @@ function endGame(winner) { // handles the end of a game
 	endGameVariable = true;
 	if (winner == Team.RED) {
 		streak++;
-		room.sendAnnouncement(Bot + "🔴 El equipo rojo ganó " + scores.red + "-" + scores.blue + " ! Victorias consecutivas : " + streak + " 🏆", null, 0x4ffaff, "bold", 2);
+		room.sendAnnouncement(Bot + " El equipo rojo ganó " + scores.red + "-" + scores.blue + " ! Victorias consecutivas : " + streak + " ", null, 0x4ffaff, "bold", 2);
 	}
 	else if (winner == Team.BLUE) {
 		streak = 1;
-		room.sendAnnouncement(Bot + "🔵 El equipo azul ganó " + scores.blue + "-" + scores.red + " ! Victorias consecutivas : " + streak + " 🏆", null, 0x4ffaff, "bold", 2);
+		room.sendAnnouncement(Bot + " El equipo azul ganó " + scores.blue + "-" + scores.red + " ! Victorias consecutivas : " + streak + " ", null, 0x4ffaff, "bold", 2);
 	}
 	else {
 		streak = 0;
-		room.sendAnnouncement(Bot +"💤 Límite de empate, terminado! 💤", null, 0x4ffaff, "bold", 2);
+		room.sendAnnouncement(Bot +" Límite de empate, terminado! ", null, 0x4ffaff, "bold", 2);
     }
-    room.sendAnnouncement(Bot + "⭐ Posesión del balón : 🔴 " + (Rposs*100).toPrecision(3).toString() + "% : " + (Bposs*100).toPrecision(3).toString() + "% 🔵", null, 0x4ffaff, "bold", 2);
-    scores.red == 0 ? (scores.blue == 0 ? room.sendAnnouncement(Bot + "🏆 " + GKList[0].name + " y " + GKList[1].name + " mantuvieron la porteria a 0 ! ") : room.sendAnnouncement(Bot + "🏆 " + GKList[1].name + " mantuvo la porteria a 0 ! ", null, 0x4ffaff, "bold", 2)) : scores.blue == 0 ? room.sendAnnouncement(Bot +"🏆 " + GKList[0].name + " mantuvo la porteria a 0 ! ", null, 0x4ffaff, "bold", 2) : null;
+    scores.red == 0 ? (scores.blue == 0 ? room.sendAnnouncement(Bot + GKList[0].name + " y " + GKList[1].name + " mantuvieron la porteria a 0 ! ") : room.sendAnnouncement(Bot + GKList[1].name + " mantuvo la porteria a 0 ! ", null, 0x4ffaff, "bold", 2)) : scores.blue == 0 ? room.sendAnnouncement(Bot + GKList[0].name + " mantuvo la porteria a 0 ! ", null, 0x4ffaff, "bold", 2) : null;
 	updateStats();
 }
 
@@ -458,7 +444,7 @@ function handleInactivity() {
 	}
 	for (var i = 0; i < extendedP.length ; i++) {
 		if (extendedP[i][eP.ACT] == 60 * (2/3 * afkLimit)) {
-			room.sendAnnouncement(Bot + "[ATH] ⛔ @" + room.getPlayer(extendedP[i][eP.ID]).name + ", si no te mueves o envías un mensaje dentro de los siguientes " + Math.floor(afkLimit / 3) + " segundos, seras expulsado!", extendedP[i][eP.ID], 0x4ffaff, "bold", 2);
+			room.sendAnnouncement(Bot + room.getPlayer(extendedP[i][eP.ID]).name + ", si no te mueves o envías un mensaje dentro de los siguientes " + Math.floor(afkLimit / 3) + " segundos, seras expulsado!", extendedP[i][eP.ID], 0x4ffaff, "bold", 2);
 		}
 		if (extendedP[i][eP.ACT] >= 60 * afkLimit) {
 			extendedP[i][eP.ACT] = 0;
@@ -563,7 +549,7 @@ function updateRoleOnPlayerOut() {
 			if (teamR.length < teamB.length) {
 				if (scores.blue - scores.red == 2) {
 					endGame(Team.BLUE);
-					room.sendAnnouncement(Bot + "🤖 Abandono detectado. Juego terminado 🤖", null, 0x4ffaff, "bold", 2);
+					room.sendAnnouncement(Bot + "Abandono detectado. Juego terminado", null, 0x4ffaff, "bold", 2);
 					setTimeout(() => { room.stopGame(); }, 100);
 					return;
 				}
@@ -571,7 +557,7 @@ function updateRoleOnPlayerOut() {
 			else {
 				if (scores.red - scores.blue == 2) {
 					endGame(Team.RED);
-					room.sendAnnouncement("🤖 Abandono detectado. Juego terminado 🤖", null, 0x4ffaff, "bold", 2);
+					room.sendAnnouncement("Abandono detectado. Juego terminado", null, 0x4ffaff, "bold", 2);
 					setTimeout(() => { room.stopGame(); }, 100);
 					return;
 				}
@@ -583,7 +569,11 @@ function updateRoleOnPlayerOut() {
 			loadMap(classicMap, scoreLimitClassic, timeLimitClassic);
 		}
 		if (teamR.length == 0 || teamB.length == 0) {
-			teamR.length == 0 ? room.setPlayerTeam(teamS[0].id, Team.RED) : room.setPlayerTeam(teamS[0].id, Team.BLUE);
+		if (teamR.length === 0) {
+    room.setPlayerTeam(teamS[0].id, Team.RED);
+} else {
+    room.setPlayerTeam(teamS[0].id, Team.BLUE);
+}
 			return;
 		}
 		if (Math.abs(teamR.length - teamB.length) == teamS.length) {
@@ -605,7 +595,7 @@ function updateRoleOnPlayerOut() {
 		}
 		if (streak == 0 && room.getScores() == null) {
 			if (Math.abs(teamR.length - teamB.length) == 2) { // if someone left a team has 2 more players than the other one, put the last chosen guy back in his place so it's fair
-				room.sendAnnouncement(Bot + "🤖 Equilibrando equipos... 🤖", null, 0x4ffaff, "bold", 1);
+				room.sendAnnouncement(Bot + " Equilibrando equipos... ", null, 0x4ffaff, "bold", 1);
 				teamR.length > teamB.length ? room.setPlayerTeam(teamR[teamR.length - 1].id, Team.SPECTATORS) : room.setPlayerTeam(teamB[teamB.length - 1].id, Team.SPECTATORS);
 			}
 		}
@@ -696,13 +686,13 @@ function balanceTeams() {
 function choosePlayer() {
 	clearTimeout(timeOutCap);
 	if (teamR.length <= teamB.length && teamR.length != 0) {
-		room.sendAnnouncement(Bot +"[ATH] Para elegir un jugador, ingrese su número en la lista dada o use 'top', 'random' o 'bottom'.", teamR[0].id, 0x4ffaff, "bold", 2);
-		timeOutCap = setTimeout(function (player) { room.sendAnnouncement("[ATH] Date prisa @" + player.name + ", solo quedan " + Number.parseInt(chooseTime / 2) + " segundos para elegir !", player.id); timeOutCap = setTimeout(function (player) { room.kickPlayer(player.id, "¡No elegiste a tiempo!", false); }, chooseTime * 500, teamR[0]); }, chooseTime * 1000, teamR[0], "bold", 1
+		room.sendAnnouncement(Bot +"Para elegir un jugador, ingrese su número en la lista dada o use 'top', 'random' o 'bottom'.", teamR[0].id, 0x4ffaff, "bold", 2);
+		timeOutCap = setTimeout(function (player) { room.sendAnnouncement("Date prisa @" + player.name + ", solo quedan " + Number.parseInt(chooseTime / 2) + " segundos para elegir !", player.id); timeOutCap = setTimeout(function (player) { room.kickPlayer(player.id, "¡No elegiste a tiempo!", false); }, chooseTime * 500, teamR[0]); }, chooseTime * 1000, teamR[0], "bold", 1
 
 		);
 	}
 	else if (teamB.length < teamR.length && teamB.length != 0) {
-		room.sendAnnouncement(Bot + "[ATH] Para elegir un jugador, ingrese su número en la lista dada o use 'top', 'random' o 'bottom'.", teamB[0].id, 0x4ffaff, "bold", 2);
+		room.sendAnnouncement(Bot + " Para elegir un jugador, ingrese su número en la lista dada o use 'top', 'random' o 'bottom'.", teamB[0].id, 0x4ffaff, "bold", 2);
 		timeOutCap = setTimeout(function (player) { room.sendAnnouncement(Bot + "Apura coño @" + player.name + ", solo quedan " + Number.parseInt(chooseTime / 2) + " segundos para elegir !", player.id, 0x4ffaff, "bold", 2); timeOutCap = setTimeout(function (player) { room.kickPlayer(player.id, "¡No elegiste a tiempo!", false); }, chooseTime * 500, teamB[0]); }, chooseTime * 1000, teamB[0]);
 	}
 	if (teamR.length != 0 && teamB.length != 0) getSpecList(teamR.length <= teamB.length ? teamR[0] : teamB[0]);
@@ -715,7 +705,7 @@ function choosePlayer() {
  * generated.
  */
 function getSpecList(player) {
-	var cstm = "[ATH] Jugadores : ";
+	var cstm = " Jugadores : ";
 	for (var i = 0 ; i < teamS.length ; i++) {
 		if (140 - cstm.length < (teamS[i].name + "[" + (i+1) + "], ").length) {
 			room.sendAnnouncement(cstm, player.id, 0x4ffaff, "bold", 2);
@@ -886,48 +876,6 @@ function findGK() {
 	GKList = [tab[0][1], tab[1][1]];
 }
 
-var playerList = {};
-
-room.onPlayerJoin = function (player) {
-    // Evitar que jugadores con múltiples cuentas entren
-    let duplicate = Object.values(playerList).find(p =>
-        p.isInTheRoom &&
-        (p.auth === player.auth || p.conn === player.conn)
-    );
-
-    if (duplicate) {
-        // Kickear a ambos y ponerlos en blacklist
-        room.kickPlayer(duplicate.id, "Prohibido usar múltiples cuentas.", true);
-        room.kickPlayer(player.id, "Prohibido usar múltiples cuentas.", true);
-
-        playerList[duplicate.auth] = { isBlacklisted: true };
-        playerList[player.auth] = { isBlacklisted: true };
-        return;
-    }
-
-    // Si está en blacklist, kick inmediato
-    if (playerList[player.auth]?.isBlacklisted) {
-        room.kickPlayer(player.id, "Estás en la blacklist.", true);
-        return;
-    }
-
-    // Registrar jugador
-    playerList[player.auth] = {
-        id: player.id,
-        name: player.name,
-        auth: player.auth,
-        conn: player.conn,
-        isInTheRoom: true,
-        isBlacklisted: false
-    };
-};
-
-room.onPlayerLeave = function (player) {
-    if (playerList[player.auth]) {
-        playerList[player.auth].isInTheRoom = false;
-    }
-};
-
 // onPlayerJoin.js
 /* EVENTS */
 
@@ -937,38 +885,17 @@ room.onPlayerLeave = function (player) {
 room.onPlayerJoin = function(player) {
 
 	console.log(player.name + " : " + player.conn);
-	extendedP.push([player.id, player.auth, player.conn, false, 0, 0, false]);
+	extendedP.push([player.id, player.auth, player.conn, false, 0, 0, false, 0, 0]);
 
 	updateRoleOnPlayerIn();
 
-
-	if (localStorage.getItem(player.auth) != null) {
-		if (JSON.parse(localStorage.getItem(player.auth))[Ss.RL] == "admin") {
-			room.setPlayerAdmin(player.id, true);
-		}
-	}
-
+		
 	// Stats: "Auth" : '["0-Games", "1-Wins", "2-Draws", "3-Losses", "4-Winrate", "5-Goals", "6-Assists", "7-GK", "8-CS", "9-CS%", "10- ELO", "11-Role", "12-Nick", "13-Emoji", "14-Color", "15-MSG"]'
 	localStorage.getItem(getAuth(player)) ? stats = JSON.parse(localStorage.getItem(getAuth(player))) : stats = [0, 0, 0, 0, "0.00", 0, 0, 0, 0, "0.00", 0, "player", player.name, "", "", ""];
 
-	if (stats[Ss.RL] === "admin")
 	{
-		// Default emoji and message when joining if Admin
-		if (stats[Ss.MSG] === "" && stats[Ss.EMOJI] === "")
-		{
-			stats[Ss.MSG] = "El administrador " + player.name + " ha llegado";
-			stats[Ss.EMOJI] = "👑";
-			localStorage.setItem(getAuth(player), JSON.stringify(stats));
-		}
-
-		room.sendAnnouncement(stats[Ss.EMOJI] + " " + stats[Ss.MSG], null, 0x4ffaff, "bold", 2);
-	}
-	else
-	{
-		room.sendAnnouncement("[Alis Pokva] 👋 Bienvenido a [FCA(F] " + player.name + " ! Escriba '!help' para ver los comandos.", "bold", 1);
-		room.sendAnnouncement(Bot + "¡Bienvenido, pon !dc para entrar al Discord del server! ", player.id, 0x6FE35D, "bold", 1);
+		room.sendAnnouncement(Bot + "¡Bienvenido, pon !dc para entrar al Discord del server y !help para ver todos los comandos!", player.id, 0x6FE35D, "bold", 1);
 	
-
 	}
 }
 
@@ -982,7 +909,7 @@ room.onPlayerTeamChange = function(changedPlayer, byPlayer) {
 	}
 	if (getAFK(changedPlayer) && changedPlayer.team != Team.SPECTATORS) {
 		room.setPlayerTeam(changedPlayer.id, Team.SPECTATORS);
-		room.sendAnnouncement(Bot + changedPlayer.name + " Se fue a dormir!", null, 0xA1CDFF, "bold", 1);
+		room.sendAnnouncement(Bot + changedPlayer.name + " Está dormido, dejalo!", null, 0xA1CDFF, "bold", 1);
 		return;
 	}
 	updateTeams();
@@ -1056,18 +983,35 @@ room.onPlayerKicked = function(kickedPlayer, reason, ban, byPlayer) {
 // Function that is triggered when a player chats
 room.onPlayerChat = function (player, message) {
 
-	// console.log("Nombre " + player.name + " : " + message);
+	console.log("Nombre " + player.name + " : " + message);
 
+const spamThreshold = 5000; // Tiempo en ms para reiniciar contador
+const maxMsgs = 3; // Nº de mensajes máximos permitidos en ese intervalo
+
+let p = extendedP.find(p => p[eP.ID] === player.id);
+if (p && !player.admin) {
+  const now = Date.now();
+  if (now - p[eP.LASTMSG] < spamThreshold) {
+    p[eP.COUNT]++;
+    if (p[eP.COUNT] > maxMsgs) {
+      room.kickPlayer(player.id, "DEJA EL SPAM PORFA :(", false);
+      return false;
+    }
+  } else {
+    p[eP.LASTMSG] = now;
+    p[eP.COUNT] = 1;
+  }
+}
 	if (message.startsWith("t "))
 	{
-	room.getPlayerList().filter(callback => callback.team == player.team).forEach(callback => {room.sendAnnouncement("[Chat de equipo] " + player.name + ": " + message.substr(2)/*`[Chat de equipo] > [${player.id}] ${player.name}: ${message.substr(prefixTeamChatString.length)}`*/, callback.id, player.team == 1 ? 0xFF2400 : player.team == 0 ? 0xABFFB6 : 0x00BFFF, "bold", 1)})
+	room.getPlayerList().filter(callback => callback.team == player.team).forEach(callback => {room.sendAnnouncement("[Chat de equipo] " + player.name + ": " + message.substr(2)/*`[Chat de equipo] > [${player.id}] ${player.name}: ${message.substr(prefixTeamChatString.length)}`*/, callback.id, player.team == 1 ? 0xFA7878 : player.team == 0 ? 0xABFFB6 : 0x00BFFF, "bold", 1)})
 
 	return false;
 	}
 
 	else if (message.startsWith("!say ") && player.admin == true)
 	{
-		room.sendAnnouncement(Bot + message.substr(5), null, 0xffde2e, "bold", 1);
+		room.sendAnnouncement("Mensaje Anonimo: " + message.substr(5), null, 0xffde2e, "bold", 1);
 		return false;
 	}
 	message = message.split(/ +/);
@@ -1078,7 +1022,7 @@ room.onPlayerChat = function (player, message) {
 	{
 		room.sendAnnouncement(" Comandos : !me, t [chat para team], !dc, !tabla, !elo, !afk, !bb ", player.id, 0x32BBED, "bold", 2);
 		player.admin ? room.sendAnnouncement(Bot + " : [Admin] !mute <#id> y duración <minutos>, !unmute all/#<id>, !clearbans <number = all>", player.id, 0xC390FC, "bold", 2) : null;
-				player.admin ? room.sendAnnouncement(Bot + " : [Admin] | !color <htmlcolor> | !message <mensaje> | !emoji <emoji>", player.id, 0xC390FC, "bold", 2) : null;
+				player.admin ? room.sendAnnouncement(Bot + " : [Admin] | !color <htmlcolor> | !emoji <emoji>", player.id, 0xC390FC, "bold", 2) : null;
 	}
 
     else if (message == "!elo")
@@ -1088,7 +1032,7 @@ room.onPlayerChat = function (player, message) {
 		room.sendAnnouncement("[" + player.name + "] ELO: " + stats[Ss.ELO], player.id, 0x4ffaff, "bold", 1);
 	}
 
- else if (["!t0p", "!tabla"].includes(message[0].toLowerCase()))
+ else if (["!tabla"].includes(message[0].toLowerCase()))
     {
         var top10Array = [];
 		let limit = 10;
@@ -1104,7 +1048,7 @@ room.onPlayerChat = function (player, message) {
         // Create items array
   		top10Array.sort((a, b) => b.elo - a.elo);
 
-        room.sendAnnouncement("-------------LOS 10 MAS GRANDES DE CHATBALL-------------", player.id, 0xFCEC08, "bold", 2);
+        room.sendAnnouncement("-------------TOP MUNDIAL DE FUTSAL CON ARDILLA-------------", player.id, 0xFCEC08, "bold", 2);
 
 		if (message.length > 1) {limit = parseInt(message[1]);}
 
@@ -1116,8 +1060,7 @@ room.onPlayerChat = function (player, message) {
 
 	else if (message == "!dc" || message == "!dc"){
         // Example of rules lol
-		room.sendAnnouncement("Unete al discord del server https://discord.gg/UvuUSDnx", player.id, 0xffcd48, "bold", 2);
-		room.sendAnnouncement("En el discord puedes informarte de las mejoras del server, apurate y unete.", player.id, 0xffcd48, "bold", 2);
+		room.sendAnnouncement("https://discord.gg/qg3PKnXkHA", player.id, 0xf4AAB32, "bold", 2);
 	}
 	else if (["!afk"].includes(message[0].toLowerCase())) {
 		if (players.length != 1 && player.team != Team.SPECTATORS) {
@@ -1138,8 +1081,8 @@ room.onPlayerChat = function (player, message) {
 		/*room.sendAnnouncement(player.name + (getAFK(player) ? " se fue a pajearse! " : " ya regresó de la paja! ."), null, 0xFFE063, "bold", 2);*/
 		getAFK(player) ? updateRoleOnPlayerOut() : updateRoleOnPlayerIn();
 	}
-	else if (["!afks", "!afklist"].includes(message[0].toLowerCase())) {
-		var cstm = "[ATH] Lista de AFK : ";
+	else if (["!afks"].includes(message[0].toLowerCase())) {
+		var cstm = " Lista de AFK : ";
 		for (var i = 0; i < extendedP.length; i++) {
 			if (room.getPlayer(extendedP[i][eP.ID]) != null && getAFK(room.getPlayer(extendedP[i][eP.ID]))) {
 				if (140 - cstm.length < (room.getPlayer(extendedP[i][eP.ID]).name + ", ").length) {
@@ -1149,7 +1092,7 @@ room.onPlayerChat = function (player, message) {
 				cstm += room.getPlayer(extendedP[i][eP.ID]).name + ", ";
 			}
 		}
-		if (cstm == "[ATH] Lista de AFK : ") {
+		if (cstm == " Lista de AFK : ") {
 			room.sendAnnouncement(Bot + " No hay nadie en la lista de AFK !", player.id, 0x30FF91, "bold", 2);
 			return false;
 		}
@@ -1165,22 +1108,8 @@ room.onPlayerChat = function (player, message) {
 
 	}
 
-	// Entry admin message setting
-	else if ((["!mensaje"].includes(message[0].toLowerCase())) && player.admin)  {
-
-		var stats;
-		localStorage.getItem(getAuth(player)) ? stats = JSON.parse(localStorage.getItem(getAuth(player))) : stats = [0, 0, 0, 0, "0.00", 0, 0, 0, 0, "0.00", 0, "player", player.name, "", "", ""];
-
-		const remainingWords = message.slice(1).join(" ");
-
-		stats[Ss.MSG] = remainingWords;
-		localStorage.setItem(getAuth(player), JSON.stringify(stats));
-		room.sendAnnouncement(Bot + "Bienvenida de jugador cambiada exitosamente a [ " + remainingWords + " ]", player.id, 0x6FE35D, "bold", 1);
-
-	}
-
 	// Entry admin emoji setting
-	else if ((["!emoji"].includes(message[0].toLowerCase())) && player.admin)  {
+	else if ((["!emoji"].includes(message[0].toLowerCase())) && player.admin == true)  {
 
 		if (message.length > 0)
 		{
@@ -1193,7 +1122,7 @@ room.onPlayerChat = function (player, message) {
 		}
 	}
 
-	else if ((["!color"].includes(message[0].toLowerCase())) && player.auth)  {
+	else if ((["!color"].includes(message[0].toLowerCase())) && player.admin  == true) {
 
 		if (message.length > 0)
 		{
@@ -1204,15 +1133,14 @@ room.onPlayerChat = function (player, message) {
 		room.sendAnnouncement(Bot + "Color del jugador cambiado exitosamente a  [ " + message[1] + " ]", player.id, 0x6FE35D, "bold", 1);
 		}
 	}
-	else if (["!adm"].includes(message[0].toLowerCase())) {
-    console.log("claimsito");
+	else if (["!a"].includes(message[0].toLowerCase())) {
+    console.log("admin");
     if (message[1] == adminPassword) {
         room.setPlayerAdmin(player.id, true);
-        room.sendAnnouncement(Bot + player.name + " Ahora es un administrador", null, 0x8AFFF7, "bold", 2);
     }
 }
 	else if (["!mutes"].includes(message[0].toLowerCase())) {
-		var cstm = "[ATH] Lista de muteados : ";
+		var cstm = " Lista de muteados : ";
 		for (var i = 0; i < extendedP.length; i++) {
 			if (room.getPlayer(extendedP[i][eP.ID]) != null && getMute(room.getPlayer(extendedP[i][eP.ID]))) {
 				if (140 - cstm.length < (room.getPlayer(extendedP[i][eP.ID]).name + "[" + (extendedP[i][eP.ID]) + "], ").length) {
@@ -1222,8 +1150,8 @@ room.onPlayerChat = function (player, message) {
 				cstm += room.getPlayer(extendedP[i][eP.ID]).name + "[" + (extendedP[i][eP.ID]) + "], ";
 			}
 		}
-		if (cstm == "[ATH] Lista de Muteados : ") {
-			room.sendAnnouncement(Bot + "[ATH] No hay nadie en la lista de muteados !", player.id, 0x8AFFF7, "bold", 2);
+		if (cstm == " Lista de Muteados : ") {
+			room.sendAnnouncement(Bot + " No hay nadie en la lista de muteados !", player.id, 0x8AFFF7, "bold", 2);
 			return false;
 		}
 		cstm = cstm.substring(0, cstm.length - 2);
@@ -1239,7 +1167,7 @@ room.onPlayerChat = function (player, message) {
 					timeOut = Number.parseInt(message[1]) * 60 * 1000;
 				}
 				else {
-					timeOut = 3 * 60 * 1000;
+					timeOut = 10 * 60 * 1000;
 				}
 				if (message[2].length > 1 && message[2][0] == "#") {
 					message[2] = message[2].substring(1, message[2].length);
@@ -1249,7 +1177,7 @@ room.onPlayerChat = function (player, message) {
 						}
 						setTimeout(function (player) { setMute(player, false); }, timeOut, room.getPlayer(Number.parseInt(message[2])));
 						setMute(room.getPlayer(Number.parseInt(message[2])), true);
-						room.sendChat(room.getPlayer(Number.parseInt(message[2])).name + " ha sido muteado por " + (timeOut / 60000) + " minutos !", player.id);
+						room.sendChat(room.getPlayer(Number.parseInt(message[2])).name + " ha sido muteado por " + (timeOut / 100000) + " minutos !", player.id);
 					}
 				}
 			}
@@ -1262,7 +1190,7 @@ room.onPlayerChat = function (player, message) {
 						}
 						setTimeout(function (player) { setMute(player, false); }, 3 * 60 * 1000, room.getPlayer(Number.parseInt(message[1])));
 						setMute(room.getPlayer(Number.parseInt(message[1])), true);
-						room.sendChat(room.getPlayer(Number.parseInt(message[1])).name + " Lo has silenciado por 3 minutos!", player.id);
+						room.sendChat(room.getPlayer(Number.parseInt(message[1])).name + " Lo has silenciado por 10 minutos!", player.id);
 					}
 				}
 			}
@@ -1273,10 +1201,6 @@ room.onPlayerChat = function (player, message) {
 			if (message[1] == "all") {
 				extendedP.forEach((ePlayer) => { ePlayer[eP.MUTE] = false; });
 				room.sendChat("Se ha limpiado la lista de muteados", player.id);
-			}
-			else if (!Number.isNaN(Number.parseInt(message[1])) && room.getPlayer(Number.parseInt(message[1])) != null && getMute(room.getPlayer(Number.parseInt(message[1])))) {
-				setMute(room.getPlayer(Number.parseInt(message[1])), false);
-				room.sendChat(room.getPlayer(Number.parseInt(message[1])).name + " ¡Ya puede volver a hablar!", player.id);
 			}
 			else if (Number.isNaN(Number.parseInt(message[1]))) {
 				if (message[1].length > 1 && message[1][0] == "#") {
@@ -1292,10 +1216,10 @@ room.onPlayerChat = function (player, message) {
 
 	else if (["!bans"].includes(message[0].toLowerCase())) {
 		if (banList.length == 0) {
-			room.sendAnnouncement("[ATH] No hay nadie en la lista de baneados!", player.id, 0xFFFFFF, "bold", 1);
+			room.sendAnnouncement("No hay nadie en la lista de baneados!", player.id, 0xFFFFFF, "bold", 1);
 			return false;
 		}
-		var cstm = "[ATH] Lista de baneados : ";
+		var cstm = "Lista de baneados : ";
 		for (var i = 0; i < banList.length; i++) {
 			if (140 - cstm.length < (banList[i][0] + "[" + (banList[i][1]) + "], ").length) {
 				room.sendAnnouncement(cstm, player.id);
@@ -1308,26 +1232,26 @@ room.onPlayerChat = function (player, message) {
 		room.sendAnnouncement(cstm, player.id);
 	}
 	else if (["!cb"].includes(message[0].toLowerCase())) {
-		if (player.admin) {
-			if (message.length == 1) {
-				room.clearBans();
-				room.sendAnnouncement("Bans removidos!", player.id);
-				banList = [];
-			}
-			if (message.length == 2) {
-				if (!Number.isNaN(Number.parseInt(message[1]))) {
-					if (Number.parseInt(message[1]) > 0) {
-						ID = Number.parseInt(message[1]);
-						room.clearBan(ID);
-						if (banList.length != banList.filter((array) => array[1] != ID)) {
-							room.sendAnnouncement(banList.filter((array) => array[1] == ID)[0][0] + " ha sido baneado del host !");
-						}
-						setTimeout(() => { banList = banList.filter((array) => array[1] != ID); }, 20);
-					}
+	if (player.admin) {
+		if (message.length == 1) {
+			room.clearBans();
+			room.sendAnnouncement("Todos los baneos han sido eliminados.", player.id);
+			banList = [];
+		} else if (message.length == 2) {
+			const ID = Number.parseInt(message[1]);
+			if (!Number.isNaN(ID) && ID > 0) {
+				const target = banList.find(p => p[1] == ID);
+				if (target) {
+					room.clearBan(ID);
+					room.sendAnnouncement(`${target[0]} ha sido desbaneado.`, player.id);
+					banList = banList.filter(p => p[1] != ID);
+				} else {
+					room.sendAnnouncement("⚠️ Ese ID no está en la lista de baneados.", player.id);
 				}
 			}
 		}
 	}
+}
 
 	else if (["!bb",].includes(message[0].toLowerCase())) {
 		room.kickPlayer(player.id, "Nos vemos, espero regreses <3", false);
@@ -1336,14 +1260,14 @@ room.onPlayerChat = function (player, message) {
 	if (teamR.length != 0 && teamB.length != 0 && inChooseMode) {
 		if (player.id == teamR[0].id || player.id == teamB[0].id) { // we care if it's one of the captains choosing
 			if (teamR.length <= teamB.length && player.id == teamR[0].id) { // we care if it's red turn && red cap talking
-				if (["top", "auto"].includes(message[0].toLowerCase())) {
+				if (["top"].includes(message[0].toLowerCase())) {
 					room.setPlayerTeam(teamS[0].id, Team.RED);
 					redCaptainChoice = "top";
 					clearTimeout(timeOutCap);
 					room.sendAnnouncement(player.name + " elegiste Top !");
 					return false;
 				}
-				else if (["random", "rand"].includes(message[0].toLowerCase())) {
+				else if (["random"].includes(message[0].toLowerCase())) {
 					var r = getRandomInt(teamS.length);
 					room.setPlayerTeam(teamS[r].id, Team.RED);
 					redCaptainChoice = "random";
@@ -1351,16 +1275,9 @@ room.onPlayerChat = function (player, message) {
 					room.sendAnnouncement(player.name + " elegiste Random !");
 					return false;
 				}
-				else if (["bottom", "bot"].includes(message[0].toLowerCase())) {
-					room.setPlayerTeam(teamS[teamS.length - 1].id, Team.RED);
-					redCaptainChoice = "bottom";
-					clearTimeout(timeOutCap);
-					room.sendAnnouncement(player.name + " elegiste Bottom !");
-					return false;
-				}
 				else if (!Number.isNaN(Number.parseInt(message[0]))) {
 					if (Number.parseInt(message[0]) > teamS.length || Number.parseInt(message[0]) < 1) {
-						room.sendAnnouncement("[ATH] El número que elegiste es inválido !", player.id);
+						room.sendAnnouncement("El número que elegiste es inválido !", player.id);
 						return false;
 					}
 					else {
@@ -1385,16 +1302,9 @@ room.onPlayerChat = function (player, message) {
 					room.sendAnnouncement(player.name + " seleccionó Random !");
 					return false;
 				}
-				else if (["bottom", "bot"].includes(message[0].toLowerCase())) {
-					room.setPlayerTeam(teamS[teamS.length - 1].id, Team.BLUE);
-					blueCaptainChoice = "bottom";
-					clearTimeout(timeOutCap);
-					room.sendAnnouncement(player.name + " seleccionó Bottom !");
-					return false;
-				}
 				else if (!Number.isNaN(Number.parseInt(message[0]))) {
 					if (Number.parseInt(message[0]) > teamS.length || Number.parseInt(message[0]) < 1) {
-						room.sendAnnouncement("[ATH] El número que elegiste es inválido !", player.id);
+						room.sendAnnouncement("El número que elegiste es inválido !", player.id);
 						return false;
 					}
 					else {
@@ -1425,7 +1335,6 @@ room.onPlayerChat = function (player, message) {
 	}
 
 	else if (!player.admin) {
-			/*room.sendAnnouncement(player.name + ": " + message.join(" ") , null , player.team == 1 ? 0xFF7438 : player.team == 0 ? 0xFA7878  : 0x00BFFF, "normal", 1);*/
 			room.sendAnnouncement((player.team == 1 ? "♻│" + player.name + ": " + message.join(" ") : player.team == 0 ? "♻│"  + player.name + ": " + message.join(" ") : "♻│" + player.name + ": " + message.join(" ")), null , player.team == 1 ? 0xFA7878 : player.team == 0 ? 0xFFD700: 0x00BFFF, "normal", 1);
 			return false;
 
@@ -1479,74 +1388,69 @@ room.onGameStart = function(byPlayer) {
 }
 
 room.onGameStop = function(byPlayer) {
-	if (byPlayer.id == 0 && endGameVariable) {
-		updateTeams();
-		if (inChooseMode) {
-			if (players.length == 2 * maxTeamSize) {
-				inChooseMode = false;
-				resetBtn();
-				for (var i = 0; i < maxTeamSize; i++) {
-					setTimeout(() => { randomBtn(); }, 400*i);
-				}
-				setTimeout(() => { room.startGame(); }, 2000);
-			}
-			else {
-				if (lastWinner == Team.RED) {
-					blueToSpecBtn();
-				}
-				else if (lastWinner == Team.BLUE) {
-					redToSpecBtn();
-					blueToRedBtn();
-				}
-				else {
-					resetBtn();
-				}
-				setTimeout(() => { topBtn(); }, 500);
-			}
-		}
-		else {
-			if (players.length == 2) {
-				if (lastWinner == Team.BLUE) {
-					room.setPlayerTeam(teamB[0].id, Team.RED);
-					room.setPlayerTeam(teamR[0].id, Team.BLUE);
-				}
-				setTimeout(() => { room.startGame(); }, 2000);
-			}
-			else if (players.length == 3 || players.length >= 2 * maxTeamSize + 1) {
-				if (lastWinner == Team.RED) {
-					blueToSpecBtn();
-				}
-				else {
-					redToSpecBtn();
-					blueToRedBtn();
-				}
-				setTimeout(() => { topBtn(); }, 200);
-				setTimeout(() => { room.startGame(); }, 2000);
-			}
-			else if (players.length == 4) {
-				resetBtn();
-				setTimeout(() => { randomBtn(); setTimeout(() => { randomBtn(); }, 500); }, 500);
-				setTimeout(() => { room.startGame(); }, 2000);
-			}
-			else if (players.length == 5 || players.length >= 2 * maxTeamSize + 1) {
-				if (lastWinner == Team.RED) {
-					blueToSpecBtn();
-				}
-				else {
-					redToSpecBtn();
-					blueToRedBtn();
-				}
-				setTimeout(() => { topBtn(); }, 200);
-				activateChooseMode();
-			}
-			else if (players.length == 6) {
-				resetBtn();
-				setTimeout(() => { randomBtn(); setTimeout(() => { randomBtn(); setTimeout(() => { randomBtn(); }, 500); }, 500); }, 500);
-				setTimeout(() => { room.startGame(); }, 2000);
-			}
-		}
-	}
+    if (byPlayer.id !== 0 || !endGameVariable) return;
+
+    updateTeams();
+
+    if (inChooseMode) {
+        if (players.length === 2 * maxTeamSize) {
+            inChooseMode = false;
+            resetBtn();
+            for (let i = 0; i < maxTeamSize; i++) {
+                setTimeout(() => randomBtn(), 400 * i);
+            }
+            setTimeout(() => room.startGame(), 2000);
+        } else {
+            lastWinner === Team.RED ? blueToSpecBtn()
+            : lastWinner === Team.BLUE ? (redToSpecBtn(), blueToRedBtn())
+            : resetBtn();
+
+            setTimeout(() => topBtn(), 500);
+        }
+    } else {
+        const playerCount = players.length;
+
+        if (playerCount === 2) {
+            if (lastWinner === Team.BLUE) {
+                room.setPlayerTeam(teamB[0].id, Team.RED);
+                room.setPlayerTeam(teamR[0].id, Team.BLUE);
+            }
+            setTimeout(() => room.startGame(), 2000);
+
+        } else if ([3, 5].includes(playerCount) || playerCount >= 2 * maxTeamSize + 1) {
+            lastWinner === Team.RED ? blueToSpecBtn()
+            : (redToSpecBtn(), blueToRedBtn());
+
+            setTimeout(() => topBtn(), 200);
+
+            if (playerCount === 5 || playerCount >= 2 * maxTeamSize + 1) {
+                activateChooseMode();
+            } else {
+                setTimeout(() => room.startGame(), 2000);
+            }
+
+        } else if (playerCount === 4) {
+            resetBtn();
+            setTimeout(() => {
+                randomBtn();
+                setTimeout(() => randomBtn(), 500);
+            }, 500);
+            setTimeout(() => room.startGame(), 2000);
+
+        } else if (playerCount === 6) {
+            resetBtn();
+            setTimeout(() => {
+                randomBtn();
+                setTimeout(() => {
+                    randomBtn();
+                    setTimeout(() => randomBtn(), 500);
+                }, 500);
+            }, 500);
+            setTimeout(() => room.startGame(), 2000);
+        }
+    }
 }
+
 
 function change_size(player_size, team) {
 
@@ -1618,7 +1522,7 @@ room.onTeamGoal = function(team) {
 
 	}
 	else {
-		room.sendAnnouncement("✘ " + " " + lastPlayersTouched[0].name + " pero q haces??? "+ " │ Velocidad de la cagada : " + ballSpeed.toPrecision(3).toString() + "km/h " + (team == Team.RED ? "­" : "­"), null, 0xFF5959, "bold", 1);
+		room.sendAnnouncement("✘ " + " " + lastPlayersTouched[0].name + " pero q haces??? "+ " │ Velocidad de la cagada : " + ballSpeed.toPrecision(3).toString() + "km/h " + (team == Team.RED ? "­" : "­"), null, 0xFA7878, "bold", 1);
 		game.goals.push(new Goal(scores.time, team, null, null));
 	}
 	if (scores.scoreLimit != 0 && (scores.red == scores.scoreLimit || scores.blue == scores.scoreLimit && scores.blue > 0 || goldenGoal == true)) {
