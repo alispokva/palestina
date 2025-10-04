@@ -2,15 +2,15 @@
 
 /* ROOM */
 
-const roomName = 'FHE ROOM 1';
+const roomName = 'FHE ROOM 2';
 const maxPlayers = 30;
 const roomPublic = false;
 
 // GEOLOCALIZATION //
 const geo = [{"code": "VE", "lat": 40, "lon": -3}];
 
-var roomWebhook = 'https://discord.com/api/webhooks/1402040523320983603/03aNn2WAAMdS3F5pLuqIC-QKFrNisgvAdO8d1tMcQxcZmJToIe9LLX7UZwElEqzZld5P'; // this webhook is used to send the details of the room (chat, join, leave) ; it should be in a private discord channel
-var gameWebhook = 'https://discord.com/api/webhooks/1420147520897552466/dO_ou4-vqWUh9RgLMmle8T_mODGmT9U7SdPsR9KA9rOghERyRnF_GpkzhRQANrTjdK-w'; // this webhook is used to send the summary of the games ; it should be in a public discord channel
+var roomWebhook = 'https://discord.com/api/webhooks/1402040644842553494/OgGoauaT5er8Qf0D7vCxahpEhIeV3TkNjiL5N7ZWhOK9quoYeAb-3ZNkkO6QxU-ixanx'; // this webhook is used to send the details of the room (chat, join, leave) ; it should be in a private discord channel
+var gameWebhook = 'https://discord.com/api/webhooks/1420147618054672447/CPxCyB1rgCqhOzfEZR8BNY_reiJjhowcfT0_-bO8WTPfFkBg3irDxD_n1cT5anvPn8Od'; // this webhook is used to send the summary of the games ; it should be in a public discord channel
 var fetchRecordingVariable = true;
 var timeLimit = 0;
 var scoreLimit = 0;
